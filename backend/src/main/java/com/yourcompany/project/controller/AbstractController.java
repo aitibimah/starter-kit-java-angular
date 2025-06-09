@@ -6,14 +6,14 @@ import org.springframework.http.ResponseEntity;
 public abstract class AbstractController {
 
     protected <T> ResponseEntity<ApiDataResponse<T>> ok(T data) {
-        return ResponseEntity.ok(ApiDataResponse.ok(data));
+        return ResponseEntity.ok(ApiDataResponse.success(data));
     }
 
     protected <T> ResponseEntity<ApiDataResponse<T>> created(T data) {
-        return ResponseEntity.status(201).body(ApiDataResponse.created(data));
+        return ResponseEntity.status(201).body(ApiDataResponse.success("Resource created successfully", data));
     }
 
     protected <T> ResponseEntity<ApiDataResponse<T>> noContent() {
-        return ResponseEntity.status(204).body(ApiDataResponse.noContent());
+        return ResponseEntity.noContent().build();
     }
 }

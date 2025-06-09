@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -28,9 +27,6 @@ class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
 
-    @Mock
-    private ModelMapper modelMapper;
-
     @InjectMocks
     private ProductServiceImpl productService;
 
@@ -39,31 +35,41 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        product = new Product(1L, "Test Product", new BigDecimal("99.99"));
-        productDTO = new ProductDTO(1L, "Test Product", new BigDecimal("99.99"));
+        product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setDescription("Test Description");
+        product.setPrice(new BigDecimal("99.99"));
+        product.setStock(10);
 
-        when(modelMapper.map(any(ProductDTO.class), eq(Product.class))).thenReturn(product);
-        when(modelMapper.map(any(Product.class), eq(ProductDTO.class))).thenReturn(productDTO);
+        productDTO = new ProductDTO();
+        productDTO.setId(1L);
+        productDTO.setName("Test Product");
+        productDTO.setDescription("Test Description");
+        productDTO.setPrice(new BigDecimal("99.99"));
+        productDTO.setStock(10);
     }
 
     @Test
-    void create_ShouldReturnCreatedProduct() {
+    void createProduct_ShouldReturnCreatedProduct() {
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        ProductDTO result = productService.create(productDTO);
+        ProductDTO result = productService.createProduct(productDTO);
 
         assertNotNull(result);
-        assertEquals(productDTO.name(), result.name());
-        assertEquals(productDTO.price(), result.price());
+        assertEquals(productDTO.getName(), result.getName());
+        assertEquals(productDTO.getPrice(), result.getPrice());
+        assertEquals(productDTO.getDescription(), result.getDescription());
+        assertEquals(productDTO.getStock(), result.getStock());
         verify(productRepository).save(any(Product.class));
     }
 
     @Test
-    void listAll_ShouldReturnAllProducts() {
+    void getAllProducts_ShouldReturnAllProducts() {
         List<Product> products = Arrays.asList(product);
         when(productRepository.findAll()).thenReturn(products);
 
-        List<ProductDTO> result = productService.listAll();
+        List<ProductDTO> result = productService.getAllProducts();
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -71,40 +77,67 @@ class ProductServiceTest {
     }
 
     @Test
-    void getById_WhenProductExists_ShouldReturnProduct() {
+    void getProductById_WhenProductExists_ShouldReturnProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        ProductDTO result = productService.getById(1L);
+        ProductDTO result = productService.getProductById(1L);
 
         assertNotNull(result);
-        assertEquals(productDTO.name(), result.name());
-        assertEquals(productDTO.price(), result.price());
+        assertEquals(productDTO.getName(), result.getName());
+        assertEquals(productDTO.getPrice(), result.getPrice());
+        assertEquals(productDTO.getDescription(), result.getDescription());
+        assertEquals(productDTO.getStock(), result.getStock());
         verify(productRepository).findById(1L);
     }
 
     @Test
-    void getById_WhenProductDoesNotExist_ShouldThrowException() {
+    void getProductById_WhenProductDoesNotExist_ShouldThrowException() {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> productService.getById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProductById(1L));
         verify(productRepository).findById(1L);
     }
 
     @Test
-    void delete_WhenProductExists_ShouldDeleteProduct() {
+    void updateProduct_WhenProductExists_ShouldReturnUpdatedProduct() {
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+
+        ProductDTO result = productService.updateProduct(1L, productDTO);
+
+        assertNotNull(result);
+        assertEquals(productDTO.getName(), result.getName());
+        assertEquals(productDTO.getPrice(), result.getPrice());
+        assertEquals(productDTO.getDescription(), result.getDescription());
+        assertEquals(productDTO.getStock(), result.getStock());
+        verify(productRepository).existsById(1L);
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    void updateProduct_WhenProductDoesNotExist_ShouldThrowException() {
+        when(productRepository.existsById(1L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> productService.updateProduct(1L, productDTO));
+        verify(productRepository).existsById(1L);
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteProduct_WhenProductExists_ShouldDeleteProduct() {
         when(productRepository.existsById(1L)).thenReturn(true);
         doNothing().when(productRepository).deleteById(1L);
 
-        assertDoesNotThrow(() -> productService.delete(1L));
+        assertDoesNotThrow(() -> productService.deleteProduct(1L));
         verify(productRepository).existsById(1L);
         verify(productRepository).deleteById(1L);
     }
 
     @Test
-    void delete_WhenProductDoesNotExist_ShouldThrowException() {
+    void deleteProduct_WhenProductDoesNotExist_ShouldThrowException() {
         when(productRepository.existsById(1L)).thenReturn(false);
 
-        assertThrows(ResourceNotFoundException.class, () -> productService.delete(1L));
+        assertThrows(ResourceNotFoundException.class, () -> productService.deleteProduct(1L));
         verify(productRepository).existsById(1L);
         verify(productRepository, never()).deleteById(any());
     }

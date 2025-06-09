@@ -6,47 +6,57 @@ import com.yourcompany.project.exception.ResourceNotFoundException;
 import com.yourcompany.project.repository.ProductRepository;
 import com.yourcompany.project.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final ModelMapper modelMapper;
 
     @Override
-    @Transactional
-    public ProductDTO create(ProductDTO productDTO) {
-        Product product = modelMapper.map(productDTO, Product.class);
-        Product savedProduct = productRepository.save(product);
-        return modelMapper.map(savedProduct, ProductDTO.class);
+    @Cacheable(value = "products", key = "#id")
+    public ProductDTO getProductById(Long id) {
+        return productRepository.findById(id)
+            .map(ProductDTO::fromEntity)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<ProductDTO> listAll() {
+    @Cacheable(value = "products")
+    public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .collect(Collectors.toList());
+            .map(ProductDTO::fromEntity)
+            .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ProductDTO getById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return modelMapper.map(product, ProductDTO.class);
+    @CacheEvict(value = "products", allEntries = true)
+    public ProductDTO createProduct(ProductDTO productDTO) {
+        return ProductDTO.fromEntity(
+            productRepository.save(productDTO.toEntity()));
     }
 
     @Override
-    @Transactional
-    public void delete(Long id) {
+    @CacheEvict(value = "products", allEntries = true)
+    public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found with id: " + id);
+        }
+        Product product = productDTO.toEntity();
+        product.setId(id);
+        return ProductDTO.fromEntity(productRepository.save(product));
+    }
+
+    @Override
+    @CacheEvict(value = "products", allEntries = true)
+    public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product not found with id: " + id);
         }

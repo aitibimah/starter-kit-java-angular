@@ -24,27 +24,34 @@ public class ProductController extends AbstractController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @Operation(summary = "Create a new product", description = "Creates a new product. Requires ADMIN role.")
-    public ResponseEntity<ApiDataResponse<ProductDTO>> create(@Valid @RequestBody ProductDTO productDTO) {
-        return created(productService.create(productDTO));
+    public ResponseEntity<ApiDataResponse<ProductDTO>> createProduct(@Valid @RequestBody ProductDTO productDTO) {
+        return created(productService.createProduct(productDTO));
     }
 
     @GetMapping
     @Operation(summary = "Get all products", description = "Retrieves a list of all products.")
-    public ResponseEntity<ApiDataResponse<List<ProductDTO>>> listAll() {
-        return ok(productService.listAll());
+    public ResponseEntity<ApiDataResponse<List<ProductDTO>>> getAllProducts() {
+        return ok(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID", description = "Retrieves a product by its ID.")
-    public ResponseEntity<ApiDataResponse<ProductDTO>> getById(@PathVariable Long id) {
-        return ok(productService.getById(id));
+    public ResponseEntity<ApiDataResponse<ProductDTO>> getProductById(@PathVariable Long id) {
+        return ok(productService.getProductById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiDataResponse<ProductDTO>> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductDTO productDTO) {
+        return ok(productService.updateProduct(id, productDTO));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @Operation(summary = "Delete product", description = "Deletes a product by its ID. Requires ADMIN role.")
-    public ResponseEntity<ApiDataResponse<Void>> delete(@PathVariable Long id) {
-        productService.delete(id);
+    public ResponseEntity<ApiDataResponse<Void>> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
         return noContent();
     }
 }
