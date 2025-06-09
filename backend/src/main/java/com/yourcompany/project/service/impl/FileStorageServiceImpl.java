@@ -1,5 +1,6 @@
-package com.yourcompany.project.service;
+package com.yourcompany.project.service.impl;
 
+import com.yourcompany.project.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
