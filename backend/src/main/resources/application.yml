@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: project
+  profiles:
+    active: @activatedProperties@    # overridden by CI/Docker
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mydb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+      indent-output: true
+    default-property-inclusion: non_null
+
+logging:
+  level:
+    root: INFO
+    com.yourcompany: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger/OpenAPI toggle
+swagger:
+  enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
