@@ -14,8 +14,13 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_SHOW_SQL=false
+      - KEYCLOAK_AUTH_URL=http://keycloak:8080/auth
+      - KEYCLOAK_REALM=your-realm
+      - KEYCLOAK_CLIENT_ID=your-client-id
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
@@ -43,16 +48,45 @@ services:
     networks:
       - app-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - "8081:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://db:5432/keycloak
+      - KC_DB_USERNAME=${DB_USER:-postgres}
+      - KC_DB_PASSWORD=${DB_PASSWORD:-postgres}
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health/ready"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    networks:
+      - app-network
+
   db:
     image: postgres:14
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=project
+      - POSTGRES_MULTIPLE_DATABASES=project,keycloak
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s

@@ -38,25 +38,28 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://localhost:8080/.well-known/jwks.json
-          issuer-uri: http://localhost:8080
-    web:
-      cors:
-        allowed-headers: '*'
-        allowed-origins: http://localhost:4200
-        allow-credentials: 'true '
-        allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-app:
-    jwt:
-      secret: ${JWT_SECRET:secret}
-      expiration: '86400000'
+          issuer-uri: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}/realms/${KEYCLOAK_REALM:your-realm}
+          jwk-set-uri: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}/realms/${KEYCLOAK_REALM:your-realm}/protocol/openid-connect/certs
+
+# Keycloak Configuration
+keycloak:
+  auth-server-url: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}
+  realm: ${KEYCLOAK_REALM:your-realm}
+  resource: ${KEYCLOAK_CLIENT_ID:your-client-id}
+  public-client: true
+  ssl-required: external
+  principal-attribute: preferred_username
+  use-resource-role-mappings: true
+  confidential-port: 0
+
 logging:
   level:
     root: INFO
     com.yourcompany: DEBUG
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.keycloak: DEBUG
 
 management:
   endpoints:
