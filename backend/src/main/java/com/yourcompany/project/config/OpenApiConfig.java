@@ -16,10 +16,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    /**
-     * This will be something like:
-     *   http://localhost:8081/realms/your-realm
-     */
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 

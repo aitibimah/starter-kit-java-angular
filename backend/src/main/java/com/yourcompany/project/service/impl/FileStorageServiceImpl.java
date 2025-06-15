@@ -1,16 +1,19 @@
 package com.yourcompany.project.service.impl;
 
 import com.yourcompany.project.service.FileStorageService;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -34,7 +37,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public String store(MultipartFile file) throws IOException {
-        String filename = StringUtils.cleanPath(file.getOriginalFilename());
+        String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String uniqueFilename = UUID.randomUUID().toString() + "_" + filename;
 
         Files.copy(file.getInputStream(), this.root.resolve(uniqueFilename),
@@ -74,7 +77,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             Files.walk(root)
                     .filter(path -> !path.equals(root))
                     .map(Path::toFile)
-                    .forEach(file -> file.delete());
+                    .forEach(File::delete);
         } catch (IOException e) {
             throw new RuntimeException("Failed to delete all files", e);
         }

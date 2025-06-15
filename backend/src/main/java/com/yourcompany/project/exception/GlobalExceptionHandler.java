@@ -23,6 +23,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -141,7 +142,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
         ErrorResponse error = new ErrorResponse(
                 "Parameter type mismatch: " + ex.getName() + " should be of type "
-                        + ex.getRequiredType().getSimpleName(),
+                        + Objects.requireNonNull(ex.getRequiredType()).getSimpleName(),
                 HttpStatus.BAD_REQUEST.value(),
                 LocalDateTime.now());
         log.error(ex.getMessage(), ex);
