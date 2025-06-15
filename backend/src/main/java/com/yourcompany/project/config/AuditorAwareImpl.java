@@ -3,26 +3,26 @@ package com.yourcompany.project.config;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import java.util.Optional;
 
-@Component
+@Component("auditorAwareImpl")
 public class AuditorAwareImpl implements AuditorAware<String> {
 
     @Override
+    @NonNull
     public Optional<String> getCurrentAuditor() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return Optional.of("system");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth instanceof JwtAuthenticationToken jwtAuth && jwtAuth.isAuthenticated()) {
+            // Use the 'sub' claim (stable user ID) rather than username
+            return Optional.of(jwtAuth.getToken().getSubject());
         }
 
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return Optional.of(jwt.getClaimAsString("preferred_username"));
-        }
-
-        return Optional.of(authentication.getName());
+        // Fallback: system user
+        return Optional.of("system");
     }
 }

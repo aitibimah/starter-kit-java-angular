@@ -34,23 +34,14 @@ spring:
     host: smtp.gmail.com
     port: '587'
     password: ${MAIL_PASSWORD:pass}
+
+  # === Keycloak Resource Server config ===
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}/realms/${KEYCLOAK_REALM:your-realm}
-          jwk-set-uri: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}/realms/${KEYCLOAK_REALM:your-realm}/protocol/openid-connect/certs
-
-# Keycloak Configuration
-keycloak:
-  auth-server-url: ${KEYCLOAK_AUTH_URL:http://localhost:8081/auth}
-  realm: ${KEYCLOAK_REALM:your-realm}
-  resource: ${KEYCLOAK_CLIENT_ID:your-client-id}
-  public-client: true
-  ssl-required: external
-  principal-attribute: preferred_username
-  use-resource-role-mappings: true
-  confidential-port: 0
+          # no /auth prefix for Keycloak 17+ (v24)
+          issuer-uri: ${KEYCLOAK_AUTH_URL:http://localhost:8081}/realms/${KEYCLOAK_REALM:your-realm}
 
 logging:
   level:
@@ -77,3 +68,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method
+
+app:
+  cors:
+    allowed-origins: "http://localhost:4200"      # ← custom property
+    allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+    allowed-headers: "Authorization,Content-Type,X-Requested-With"
